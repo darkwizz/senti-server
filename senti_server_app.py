@@ -1,6 +1,5 @@
 import random
 
-from gensim import utils
 from flask import Flask, jsonify
 from flask import request
 
@@ -42,9 +41,11 @@ def get_brute_model_analyzed_text_sentiment():
         }, 400)
 
     # now just mocking
-    tokens = list(utils.tokenize(data['text']))
+    tokens = data['text'].split(' ')
     result = []
     for token in tokens:
+        if not token.isalpha():
+            continue
         item = {
             'token': token,
             'sentiment': random.random()
@@ -62,9 +63,11 @@ def get_tuned_brute_model_analyzed_text_sentiment():
         }, 400)
 
     # now just mocking
-    tokens = list(utils.tokenize(data['text']))
+    tokens = data['text'].split(' ')
     result = []
     for token in tokens:
+        if not token.isalpha():
+            continue
         item = {
             'token': token,
             'sentiment': random.random()
@@ -82,9 +85,11 @@ def get_svm_model_analyzed_text_sentiment():
         }, 400)
 
     # now just mocking
-    tokens = list(utils.tokenize(data['text']))
+    tokens = data['text'].split(' ')
     result = []
     for token in tokens:
+        if not token.isalpha():
+            continue
         item = {
             'token': token,
             'sentiment': random.random()
