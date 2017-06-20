@@ -25,15 +25,22 @@ def get_available_methods():
             'url': '/api/models/brute-tuned/text-sentiment'
         },
         {
-            'name': "SVM (Support Vector Machine)",
-            'url': '/api/models/svm/text-sentiment'
+            'name': "LSTM",
+            'url': '/api/models/lstm/text-sentiment'
         }
     ]
     return jsonify(result)
 
 
-@app.route('/api/models/brute/text-sentiment/', methods=['POST'], strict_slashes=False)
-def get_brute_model_analyzed_text_sentiment():
+urls = {
+    'brute': '',
+    'brute-tuned': '',
+    'lstm': ''
+}
+
+
+@app.route('/api/models/<string:model>/text-sentiment/', methods=['POST'], strict_slashes=False)
+def get_model_analyzed_text_sentiment(model):
     data = request.get_json(force=True)
     if not data or not data.get('text'):
         return json_abort({
@@ -42,59 +49,19 @@ def get_brute_model_analyzed_text_sentiment():
 
     # now just mocking
     tokens = data['text'].split(' ')
-    result = []
+    result = {
+        'sentiment': 0.0,
+        'tokens': []
+    }
     for token in tokens:
         if not token.isalpha():
             continue
-        item = {
+        result['tokens'].append({
             'token': token,
             'sentiment': random.random()
-        }
-        result.append(item)
-    return jsonify(result)
-
-
-@app.route('/api/models/brute-tuned/text-sentiment/', methods=['POST'], strict_slashes=False)
-def get_tuned_brute_model_analyzed_text_sentiment():
-    data = request.get_json(force=True)
-    if not data or not data.get('text'):
-        return json_abort({
-            'message': 'Must be JSON field text'
-        }, 400)
-
-    # now just mocking
-    tokens = data['text'].split(' ')
-    result = []
-    for token in tokens:
-        if not token.isalpha():
-            continue
-        item = {
-            'token': token,
-            'sentiment': random.random()
-        }
-        result.append(item)
-    return jsonify(result)
-
-
-@app.route('/api/models/svm/text-sentiment/', methods=['POST'], strict_slashes=False)
-def get_svm_model_analyzed_text_sentiment():
-    data = request.get_json(force=True)
-    if not data or not data.get('text'):
-        return json_abort({
-            'message': 'Must be JSON field text'
-        }, 400)
-
-    # now just mocking
-    tokens = data['text'].split(' ')
-    result = []
-    for token in tokens:
-        if not token.isalpha():
-            continue
-        item = {
-            'token': token,
-            'sentiment': random.random()
-        }
-        result.append(item)
+        })
+        result['sentiment'] += result['tokens'][-1]['sentiment']
+    result['sentiment'] /= len(result['tokens'])
     return jsonify(result)
 
 
