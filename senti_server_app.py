@@ -1,9 +1,12 @@
+import json
 import random
 
+import requests
 from flask import Flask, jsonify
+from flask import Response
 from flask import request
 
-from utils import json_abort
+from utils import json_abort, JSON_MIME
 
 app = Flask(__name__)
 
@@ -25,7 +28,7 @@ def get_available_methods():
             'url': '/api/models/brute-tuned/text-sentiment'
         },
         {
-            'name': "LSTM",
+            'name': "LSTM (best results among available)",
             'url': '/api/models/lstm/text-sentiment'
         }
     ]
@@ -35,7 +38,7 @@ def get_available_methods():
 urls = {
     'brute': '',
     'brute-tuned': '',
-    'lstm': ''
+    'lstm': 'https://lstm-model-service.herokuapp.com/api/sentiment?text={0}'
 }
 
 
@@ -48,21 +51,33 @@ def get_model_analyzed_text_sentiment(model):
         }, 400)
 
     # now just mocking
-    tokens = data['text'].split(' ')
-    result = {
-        'sentiment': 0.0,
-        'tokens': []
-    }
-    for token in tokens:
-        if not token.isalpha():
-            continue
-        result['tokens'].append({
-            'token': token,
-            'sentiment': random.random()
-        })
-        result['sentiment'] += result['tokens'][-1]['sentiment']
-    result['sentiment'] /= len(result['tokens'])
-    return jsonify(result)
+    url = urls.get(model, '')
+    if not url:
+        tokens = data['text'].split(' ')
+        result = {
+            'sentiment': 0.0,
+            'tokens': []
+        }
+        for token in tokens:
+            if not token.isalpha():
+                continue
+            result['tokens'].append({
+                'token': token,
+                'sentiment': random.random()
+            })
+            result['sentiment'] += result['tokens'][-1]['sentiment']
+        result['sentiment'] /= len(result['tokens'])
+        result = json.dumps(result)
+    else:
+        response = requests.get(url.format(data['text']))
+        result = '{}'
+        if response.status_code == 200:
+            result = response.json()
+            result['sentiment'] -= 0.07
+            for item in result['tokens']:
+                item['sentiment'] -= 0.07
+            result = json.dumps(result)
+    return Response(result, mimetype=JSON_MIME)
 
 
 if __name__ == '__main__':
